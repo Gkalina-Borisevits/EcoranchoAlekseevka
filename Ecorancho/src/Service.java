@@ -1,4 +1,7 @@
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -7,42 +10,64 @@ public class Service {
 
   private String serviceName;
   private static int guest;
-  private double price;
+  private LocalTime startTime;
+  private static double price;
   private static double baseCost;
   private static double guestCost;
 
-  public Service(String serviceName, int guest, double baseCost, double guestCost) {
-    this.serviceName = serviceName;
-    this.guest = guest;
+  public Service(LocalTime startTime, String serviceName, int guest, double baseCost,
+      double price) {
+    this.startTime = startTime;
+    this.serviceName = checkServiceName(serviceName);
+    this.guest = checkGuest(guest);
     this.baseCost = baseCost;
     this.guestCost = guestCost;
-    calculateCost();
-  }
-
-  public Service(String serviceName, int guest, double price) {
-    this.serviceName = serviceName;
-    this.guest = guest;
     this.price = calculateCost();
   }
 
+  public Service(String serviceName, double price) {
+    this.serviceName = checkServiceName(serviceName);
+    this.guest = checkGuest(guest);
+    this.price = calculateCost();
+  }
+
+  private int checkGuest(int guest) {
+    if (guest < 0) {
+      throw new IllegalArgumentException("Количество гостей не может быть отрицательным") ж
+    }
+    return guest;
+  }
+
+  private String checkServiceName(String serviceName) {
+    while (serviceName.isEmpty()) {
+      System.out.println("Название услуги не может быть пустой");
+    }
+    return checkServiceName(serviceName);
+  }
+
+
   public String getServiceName() {
     return serviceName;
-  }
-
-  public double getBaseCost() {
-    return baseCost;
-  }
-
-  public double getGuestCost() {
-    return guestCost;
   }
 
   public int getGuest() {
     return guest;
   }
 
+  public double getBaseCost() {
+    return baseCost;
+  }
+
   public double getPrice() {
-    return price;
+    return calculateCost();
+  }
+
+  public LocalTime getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(LocalTime startTime) {
+    this.startTime = startTime;
   }
 
   public void setPrice(double price) {
@@ -67,11 +92,6 @@ public class Service {
     this.serviceName = serviceName;
   }
 
-  public void setCost(double baseCost) {
-    this.baseCost = baseCost;
-    calculateCost();
-  }
-
   public static double calculateCost() {
     return baseCost + (guestCost * guest);
   }
@@ -84,90 +104,41 @@ public class Service {
     }
   }
 
-  public static Service interactiveSelect(Scanner scanner, List<Service> availableServices) {
-    printAvailableServices(availableServices);
-
-    System.out.println("Выберите номер услуги:");
-    int choice = scanner.nextInt();
-    scanner.nextLine();
-
-    if (choice >= 1 && choice <= availableServices.size()) {
-      return availableServices.get(choice - 1);
-    } else {
-      System.out.println("Некорректный выбор. Выберите существующий номер.");
-      return null;
-    }
-  }
-  public static Service interactiveRead(Scanner scanner, List<Service> availableServices) {
-    selectServices(scanner, availableServices);
+  public static Service interactiveService(Scanner scanner) {
     System.out.println("Введите название услуги:");
-    String name = scanner.nextLine();
-    System.out.print("Введите предполагаемое количество гостей: ");
+    String nameServiceInteractive = scanner.nextLine();
+
+    LocalTime startTime = null;
+    boolean isStartTime = false;
+    while (!isStartTime) {
+      System.out.print("Введите запланированное время начала услуги в формате: HH:MM: ");
+      String startTimeInput = scanner.nextLine();
+      try {
+        startTime = LocalTime.parse(startTimeInput);
+        isStartTime = true;
+      } catch (DateTimeParseException e) {
+        System.out.println("Не корректный ввод: " + startTimeInput);
+        System.out.print("Введите время в формате: HH:MM:  ");
+      }
+    }
+    System.out.println("Введите предполагаемое количество гостей:");
     while (!scanner.hasNextInt()) {
-      System.out.println("Некорректный ввод: " + scanner.nextLine());
+      System.out.println("Не корректный ввод: " + scanner.nextLine());
       System.out.print("Введите целое число: ");
     }
-    int guest = scanner.nextInt();
+    int guestNumber = scanner.nextInt();
     scanner.nextLine();
-
-    double totalCost = 0.0;
-    List<Service> selectedServices = new ArrayList<>();
-
-    while (true) {
-      Service.printAvailableServices(availableServices);
-      Service selectedService = Service.interactiveSelect(scanner, availableServices);
-      if (selectedService == null) {
-        break;
-      }
-
-      double cost = selectedService.calculateCost();
-      totalCost += cost;
-      System.out.println("Стоимость услуги " + selectedService.getServiceName() +
-          " для " + guest + " гостей составит: " + cost);
-
-      selectedServices.add(selectedService);
-    }
-
-    System.out.println("Общая стоимость выбранных услуг для " + guest + " гостей составит: " + totalCost);
-
-    return new Service(name, guest, totalCost);
+    return new Service(startTime, nameServiceInteractive, guestNumber, guestCost, price);
   }
 
-  public static List<Service> selectServices(Scanner scanner, List<Service> availableServices) {
-    List<Service> selectedServices = new ArrayList<>();
-
-    while (true) {
-      ServiceCommand.printMenu();
-      int choice = scanner.nextInt();
-      scanner.nextLine();
-
-      switch (choice) {
-        case 1:
-          Service.printAvailableServices(availableServices);
-          Service selectedService = Service.interactiveSelect(scanner, availableServices);
-          if (selectedService != null) {
-            selectedServices.add(selectedService);
-          }
-          break;
-        case 0:
-          System.out.println("Завершение выбора.");
-          break;
-        default:
-          System.out.println("Некорректный выбор. Повторите ввод.");
-      }
-
-      if (choice == 0) {
-        break;
-      }
-    }
-    return selectedServices;
-  }
 
   public static Service parseFromCSVLine(String s, String delimiter) {
     String[] cells = s.split(delimiter);
     try {
-      return new Service(cells[0], Integer.parseInt(cells[1]), Double.parseDouble(cells[2]),
-          Double.parseDouble(cells[3]));
+      LocalTime startTime = LocalTime.parse(cells[0]);
+      return new Service(startTime, cells[1], Integer.parseInt(cells[2]),
+          Double.parseDouble(cells[3]),
+          Double.parseDouble(cells[4]));
     } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
       throw new IllegalArgumentException("Некорректная строка: " + s);
     }
@@ -184,9 +155,9 @@ public class Service {
   }
 
   public String getCSVLine(String delimiter) {
-    return String.join(delimiter, serviceName, Integer.toString(guest), Double.toString(baseCost),
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+    String formattedTime = startTime.format(formatter);
+    return String.join(delimiter, formattedTime, serviceName, Integer.toString(guest), Double.toString(baseCost),
         Double.toString(guestCost));
   }
-
-
 }
