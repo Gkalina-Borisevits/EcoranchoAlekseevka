@@ -1,8 +1,6 @@
-
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -33,7 +31,7 @@ public class Service {
 
   private int checkGuest(int guest) {
     if (guest < 0) {
-      throw new IllegalArgumentException("Количество гостей не может быть отрицательным") ж
+      throw new IllegalArgumentException("Количество гостей не может быть отрицательным");
     }
     return guest;
   }
@@ -42,7 +40,7 @@ public class Service {
     while (serviceName.isEmpty()) {
       System.out.println("Название услуги не может быть пустой");
     }
-    return checkServiceName(serviceName);
+    return serviceName;
   }
 
 
@@ -144,6 +142,7 @@ public class Service {
     }
   }
 
+
   @Override
   public String toString() {
     return "Service{" +
@@ -157,7 +156,8 @@ public class Service {
   public String getCSVLine(String delimiter) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     String formattedTime = startTime.format(formatter);
-    return String.join(delimiter, formattedTime, serviceName, Integer.toString(guest), Double.toString(baseCost),
+    return String.join(delimiter, formattedTime, serviceName, Integer.toString(guest),
+        Double.toString(baseCost),
         Double.toString(guestCost));
   }
 }

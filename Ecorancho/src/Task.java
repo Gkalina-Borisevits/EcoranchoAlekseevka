@@ -1,5 +1,8 @@
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
@@ -7,112 +10,108 @@ import java.util.TreeMap;
 
 public class Task {
 
-  private LocalDateTime localDateTime;
-  private String task;
-  private Map<LocalDateTime, Service> tasks;
-  private ArrayList<String> services;
+  private LocalDate localDate;
+  private String userName;
+  private static TreeMap<LocalTime, Service> tasks;
+  //private ArrayList<String> services;
 
-  public Task(LocalDateTime localDateTime, String task) {
-    this.localDateTime = localDateTime;
-    this.task = task;
+  public Task(LocalDate localDate, String userName, TreeMap<LocalTime, Service> tasks) {
+    this.localDate = localDate;
+    this.userName = checkTaskName(userName);
     this.tasks = new TreeMap<>();
-    this.services = new ArrayList<String>();
   }
 
-  public Task(LocalDateTime localDateTime, String task, ArrayList<Service> services) {
-    this.localDateTime = localDateTime;
-    this.task = task;
-    this.services = new ArrayList<String>();
+  private String checkTaskName(String userName) {
+    while (userName.isEmpty()) {
+      System.out.println("Это поле не может быть пустым");
+    }
+    return checkTaskName(userName);
   }
 
-  public Task(LocalDateTime localDateTime, String task, Map<LocalDateTime, String> tasks) {
-    this.localDateTime = localDateTime;
-    this.task = task;
-    // this.tasks = tasks;
+  public String getUserName() {
+    return userName;
   }
 
-  public static Task parseFromCSVLine(String s, String delimiter) {
+  public static TreeMap<LocalTime, Service> getTasks() {
+    return tasks;
+  }
+
+  public static Task interactiveTask(Scanner scanner) {
+    System.out.print("Введите Ваше имя: ");
+    String userName = scanner.nextLine();
+    System.out.print("Введите предполагаемую дату мероприятия (dd-MM-yyyy): ");
+    LocalDate startDate = null;
+    boolean isStartDate = false;
+    while (!isStartDate) {
+      System.out.print("Введите запланированную дату мероприятия  в формате: (dd-MM-yyyy): ");
+      String startDateInput = scanner.nextLine();
+      try {
+        startDate = LocalDate.parse(startDateInput, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        isStartDate = true;
+      } catch (DateTimeParseException e) {
+        System.out.println("Не корректный ввод: " + startDateInput);
+        System.out.print("Введите время в формате: HH:MM:  ");
+      }
+    }
+    Service service = Service.interactiveService(scanner);
+    Task task = new Task(startDate, userName, tasks);
+    task.addService(service.getStartTime(), service);
+
+    return task;
+  }
+
+
+  public static Task parseFromCSVLinen(String s, String delimiter) {
     String[] cells = s.split(delimiter);
     try {
-
-      LocalDateTime localDateTime = LocalDateTime.parse(cells[0]);
-      String task = cells[1];
-      Map<LocalDateTime, String> tasks = new TreeMap<>();
+      LocalDate localDate = LocalDate.parse(cells[0]);
+      String userName = cells[1];
+      Map<LocalTime, Service> tasks = new TreeMap<>();
       for (int i = 2; i < cells.length; i++) {
-        String[] taskEntry = cells[i].split(" : ");
-        LocalDateTime entryDateTime = LocalDateTime.parse(taskEntry[0]);
-        String entryTask = taskEntry[1];
-        tasks.put(entryDateTime, entryTask);
+        Service service = Service.parseFromCSVLine(cells[i], " : ");
+        tasks.put(service.getStartTime(), service);
       }
-      return new Task(localDateTime, task, tasks);
+      return new Task(localDate, userName, (TreeMap<LocalTime, Service>) tasks);
     } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
       throw new IllegalArgumentException("NO CORRECT " + s);
     }
   }
 
-  public String getTask() {
-    return task;
+
+  public LocalDate getLocalDate() {
+    return localDate;
   }
 
-  public ArrayList<String> getServices() {
-    return services;
+  public void setLocalDateTime(LocalDate localDate) {
+    this.localDate = localDate;
   }
 
-  public void setServices(ArrayList<String> services) {
-    this.services = services;
-  }
-
-  public LocalDateTime getLocalDateTime() {
-    return localDateTime;
-  }
-
-  public void setLocalDateTime(LocalDateTime localDateTime) {
-    this.localDateTime = localDateTime;
-  }
-
-  public void setTask(String task) {
-    this.task = task;
-  }
 
   @Override
   public String toString() {
     return "Task{" +
-        "localDateTime=" + localDateTime +
-        ", task='" + task + '\'' +
+        "localDateTime =" + localDate +
+        ", name ='" + userName + '\'' +
         '}';
+  }
+
+  public void addService(LocalTime startTime, Service service) {
+    tasks.put(startTime, service);
   }
 
   public String getCSVLine(String delimiter) {
     StringBuilder csvLine = new StringBuilder();
-    csvLine.append(localDateTime).append(delimiter).append(task);
 
-    for (Map.Entry<LocalDateTime, Service> entry : tasks.entrySet()) {
-      csvLine.append(entry.getKey()).append(" : ").append(entry.getValue());
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    String formattedDate = localDate.format(dateFormatter);
+
+    csvLine.append(formattedDate).append(delimiter).append(userName);
+
+    for (Map.Entry<LocalTime, Service> entry : tasks.entrySet()) {
+      DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+      String formattedTime = entry.getKey().format(timeFormatter);
+      csvLine.append(formattedTime).append(" : ").append(entry.getValue().getCSVLine(delimiter));
     }
     return csvLine.toString();
-  }
-
-  public void interactiveAddService(Scanner scanner) {
-    System.out.println("Введите дату и время для услуги (dd-MM-yyyy HH:mm): ");
-    String dateTimeInput = scanner.nextLine();
-    LocalDateTime dateTime = LocalDateTime.parse(dateTimeInput, DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
-
-    System.out.println("Введите название услуги: ");
-    String serviceName = scanner.nextLine();
-
-    System.out.println("Введите количество гостей: ");
-    int guest = scanner.nextInt();
-    scanner.nextLine();
-
-    System.out.println("Введите базовую стоимость услуги: ");
-    double baseCost = scanner.nextDouble();
-    scanner.nextLine();
-
-    System.out.println("Введите стоимость услуги для гостя: ");
-    double guestCost = scanner.nextDouble();
-    scanner.nextLine();
-
-    Service service = new Service(serviceName, guest, baseCost, guestCost);
-    tasks.put(dateTime, service);
   }
 }
