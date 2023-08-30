@@ -2,9 +2,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public class ServicesFile {
 
@@ -24,20 +28,24 @@ public class ServicesFile {
     this.separator = delimiter;
   }
 
-  public ArrayList<Service> readAvailableServicesFromFile() throws FileNotFoundException {
-    ArrayList<Service> services = new ArrayList<>();
+  public TreeMap<LocalTime, Service> readAvailableServicesFromFile() throws FileNotFoundException {
+    TreeMap<LocalTime, Service> services = new TreeMap<>();
     Scanner scanner = new Scanner(file);
     while (scanner.hasNextLine()) {
-      services.add(Service.parseFromCSVLine(scanner.nextLine(), separator));
+      String line = scanner.nextLine();
+      Service service = Service.parseFromCSVLine(line, separator);
+      services.put(service.getStartTime(), service);
     }
     scanner.close();
     return services;
   }
 
-  public void writeServices(List<Service> services) throws IOException {
+  public void writeService(TreeMap<LocalTime, Service> services) throws IOException {
+
     try (FileWriter writer = new FileWriter(file)) {
-      for (Service s : services) {
-        writer.write(s.getCSVLine(separator));
+      for (Map.Entry<LocalTime, Service> entry : services.entrySet()) {
+        Service service = entry.getValue();
+        writer.write(service.getCSVLine(separator));
       }
     }
   }

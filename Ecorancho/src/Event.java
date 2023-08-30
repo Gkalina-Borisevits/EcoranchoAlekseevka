@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
@@ -7,25 +8,32 @@ abstract class Event {
   protected static LocalDateTime localDateTime;
   protected static String nameCustomer;
   protected double cost;
-  protected Map<LocalDateTime, String> tasks;
-  protected TreeMap<Task, Service> serviceMap;
+  protected MenuCommand menuCommand;
+  protected TreeMap<LocalDate, Task> tasks;
+  protected TreeMap<Task, Service> service;
+
 
   public Event(LocalDateTime localDateTime, String nameCustomer, double cost) {
     this.localDateTime = localDateTime;
     this.nameCustomer = nameCustomer;
     this.cost = cost;
     this.tasks = new TreeMap<>();
+    this.service = new TreeMap<>();
+  }
+  public Event(MenuCommand menuCommand) {
+    this.menuCommand = menuCommand;
   }
 
-  public LocalDateTime getLocalDateTime() {
-    return localDateTime;
+
+  public MenuCommand getMenuCommand() {
+    return menuCommand;
   }
 
-  public LocalDateTime getLocalDate() {
-    return localDateTime;
+  public TreeMap<Task, Service> getService() {
+    return service;
   }
 
-  public Map<LocalDateTime, String> getTasks() {
+  public TreeMap<LocalDate, Task> getTasks() {
     return tasks;
   }
 
@@ -45,11 +53,9 @@ abstract class Event {
     this.nameCustomer = nameCustomer;
   }
 
-  public void setLocalDateTime(LocalDateTime localDateTime) {
-    this.localDateTime = localDateTime;
-  }
 
-  public void setTasks(Map<LocalDateTime, String> tasks) {
+
+  public void setTasks(TreeMap<LocalDate, Task> tasks) {
     this.tasks = tasks;
   }
 }

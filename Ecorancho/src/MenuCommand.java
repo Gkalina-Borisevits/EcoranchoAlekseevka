@@ -1,12 +1,13 @@
 import java.util.Scanner;
 
 public enum MenuCommand {
-  EXIT(0, "ВЫХОД", "EXIT"),
+
+  UNEXEPTED(10, "", ""),
   WEDDING(1, "СВАДЬБА", "WEDDING"),
   CORPORATE(2, "КОРПОРАТИВ", "CORPORATE"),
   BIRTHDAY(3, "ДЕНЬ РОЖДЕНИЯ", "BIRTHDAY"),
   TEAM_BUILDING(4, "ТИМ-БИЛДИНГ", "TEAM_BUILDING"),
-  UNEXEPTED(10, "", "");
+  EXIT(0, "ВЫХОД", "EXIT");
 
 
   private final int num;

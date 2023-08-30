@@ -1,8 +1,10 @@
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public class Service {
 
@@ -95,25 +97,17 @@ public class Service {
   }
 
 
-  public static void printAvailableServices(List<Service> services) {
-    System.out.println("\nДоступные услуги:");
-    for (int i = 0; i < services.size(); i++) {
-      System.out.println((i + 1) + ". " + services.get(i).getServiceName());
-    }
-  }
-
   public static Service interactiveService(Scanner scanner) {
     System.out.println("Введите название услуги:");
     String nameServiceInteractive = scanner.nextLine();
-
-    LocalTime startTime = null;
-    boolean isStartTime = false;
-    while (!isStartTime) {
-      System.out.print("Введите запланированное время начала услуги в формате: HH:MM: ");
+    System.out.print("Введите запланированное время начала услуги в формате: HH:MM: ");
+    LocalTime startTime = LocalTime.now();
+    boolean startTimeRead = false;
+    while (!startTimeRead) {
       String startTimeInput = scanner.nextLine();
       try {
         startTime = LocalTime.parse(startTimeInput);
-        isStartTime = true;
+        startTimeRead = true;
       } catch (DateTimeParseException e) {
         System.out.println("Не корректный ввод: " + startTimeInput);
         System.out.print("Введите время в формате: HH:MM:  ");
@@ -129,11 +123,34 @@ public class Service {
     return new Service(startTime, nameServiceInteractive, guestNumber, guestCost, price);
   }
 
+  public static TreeMap<LocalTime, Service> interactiveServices(Scanner scanner) {
+    TreeMap<LocalTime, Service> selectedServices = new TreeMap<>();
+
+    while (true) {
+      Service service = interactiveService(scanner);
+      selectedServices.put(service.getStartTime(), service);
+
+      System.out.println("Услуга успешно добавлена.");
+      System.out.print("Введите 0 для завершения выбора услуг или любую цифру для продолжения:");
+      int choice = scanner.nextInt();
+      scanner.nextLine();
+      while (!scanner.hasNextInt()) {
+        System.out.println("Не корректный ввод: " + scanner.nextLine());
+        System.out.print("Введите целое число: ");
+      }
+      if (choice == 0) {
+        scanner.nextLine();
+        break;
+      }
+    }
+    return selectedServices;
+  }
 
   public static Service parseFromCSVLine(String s, String delimiter) {
     String[] cells = s.split(delimiter);
     try {
-      LocalTime startTime = LocalTime.parse(cells[0]);
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+      LocalTime startTime = LocalTime.parse(cells[0], formatter);
       return new Service(startTime, cells[1], Integer.parseInt(cells[2]),
           Double.parseDouble(cells[3]),
           Double.parseDouble(cells[4]));
@@ -158,6 +175,6 @@ public class Service {
     String formattedTime = startTime.format(formatter);
     return String.join(delimiter, formattedTime, serviceName, Integer.toString(guest),
         Double.toString(baseCost),
-        Double.toString(guestCost));
+        Double.toString(guestCost), Double.toString(price)) + '\n';
   }
 }

@@ -1,9 +1,12 @@
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
@@ -45,11 +48,22 @@ public class TasksFile {
   }
 
   public void writeTasks(Map<LocalDate, Task> tasks) throws IOException {
+
     try (FileWriter writer = new FileWriter(file)) {
       for (Map.Entry<LocalDate, Task> entry : tasks.entrySet()) {
         Task task = entry.getValue();
-        writer.write(task.getCSVLine(separator));
+        writer.write(task.getCSVLines(separator));
       }
+    }
+  }
+
+  public static void printServices() throws FileNotFoundException {
+    TreeMap<LocalTime, Service> serviceMap = new TreeMap<>();
+
+    System.out.println("Список услуг для мероприятия: ");
+    Service.parseFromCSVLine("", "; ");
+    for (Service service : serviceMap.values()) {
+      System.out.println(service.getServiceName() + " - " + service.getPrice());
     }
   }
 }

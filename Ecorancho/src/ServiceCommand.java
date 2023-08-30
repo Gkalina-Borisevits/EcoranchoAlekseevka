@@ -1,4 +1,8 @@
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public enum ServiceCommand {
   UNEXEPTED(10, ""),
@@ -13,10 +17,15 @@ public enum ServiceCommand {
 
   private final int num;
   private final String displayName;
+  private ServicesFile servicesFile;
+  private static TreeMap<LocalDate, Task> tasks = new TreeMap<>();
+
 
   ServiceCommand(int num, String displayName) {
     this.num = num;
     this.displayName = displayName;
+
+
   }
 
   public static void printMenu() {
@@ -30,10 +39,12 @@ public enum ServiceCommand {
     }
   }
 
-  public static ServiceCommand serviceCommand(Scanner scanner) {
+  public static ServiceCommand serviceCommand(Scanner scanner) throws IOException {
+    printMenu();
     boolean isRun = true;
+
     while (isRun) {
-      printMenu();
+
       if (!scanner.hasNextInt()) {
         throw new RuntimeException("Ожидаем ввод команды");
       }
@@ -42,24 +53,37 @@ public enum ServiceCommand {
       switch (command) {
         case 1:
           System.out.println("Вы выбрали: " + LISTOFSERVICES.displayName);
+          TasksFile.printServices();
           break;
         case 2:
           System.out.println("Вы выбрали: " + ADDSERVICE.displayName);
+
+
+          Wedding.interactiveRead(scanner);
+          //Service.interactiveService(scanner);
+          System.out.println("Услуга добавлена");
           break;
         case 3:
           System.out.println("Вы выбрали: " + DELETESERVICE.displayName);
+          Events.deleteService(scanner);
+
           break;
         case 4:
           System.out.println("Вы выбрали: " + SAVEEVENT.displayName);
+
+          //TasksFile.writeTasks("res/services.csv",);
           break;
         case 5:
           System.out.println("Вы выбрали: " + EDITEVENT.displayName);
+
+          Events.editEvent("res/services.csv");
           break;
         case 6:
           System.out.println("Вы выбрали: " + CREATEEVENTPLAN.displayName);
           break;
         case 7:
           System.out.println("Вы выбрали: " + PRINTEVENTPLAN.displayName);
+          Events.printEventPlan();
           break;
         case 8:
           System.out.println("Вы выбрали: " + EXIT.displayName);
